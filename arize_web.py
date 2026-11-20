@@ -403,8 +403,21 @@ tab_chat, tab_stock, tab_reg, tab_move, tab_hist, tab_stats = _tabs[:6]
 with tab_chat:
     if "chat" not in st.session_state:
         st.session_state.chat = [("assistant", HELP)]
+    def _fmt(m: str) -> str:
+        """ทำให้ข้อความแชทอ่านง่าย: แต่ละบรรทัดขึ้นบรรทัดใหม่จริง และ • กลายเป็นรายการ"""
+        lines = []
+        for ln in str(m).split("\n"):
+            s = ln.strip()
+            if s.startswith("•"):
+                s = "- " + s.lstrip("• ").strip()
+                lines.append(s)
+            else:
+                lines.append(s + "  ")  # ท้ายบรรทัดเว้นวรรค 2 ช่อง = ขึ้นบรรทัดใหม่ใน markdown
+        return "\n".join(lines)
+
     for role, msg in st.session_state.chat:
-        st.chat_message(role, avatar=AVATAR if role == "assistant" else USER_AVATAR).write(msg)
+        with st.chat_message(role, avatar=AVATAR if role == "assistant" else USER_AVATAR):
+            st.markdown(_fmt(msg) if role == "assistant" else msg)
     if prompt := st.chat_input("สั่งงานอะริเสะ เช่น เบิก P001 5"):
         st.session_state.chat.append(("user", prompt))
         st.session_state.chat.append(("assistant", bot.handle(prompt, user)))
